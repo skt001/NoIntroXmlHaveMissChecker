@@ -1,22 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-      <RootNamespace>NoIntroXmlHaveMissChecker</RootNamespace>
-      <AssemblyName>NoIntroXmlHaveMissChecker</AssemblyName>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <StartupObject>Sub Main</StartupObject>
+    <StartupObject>NoIntroXmlHaveMissChecker.My.MyApplication</StartupObject>
     <UseWindowsForms>true</UseWindowsForms>
     <MyType>WindowsForms</MyType>
+    <MainForm>FormMainWindow</MainForm>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <ApplicationIcon>game.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>none</DebugType>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="LocalUtilities.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="game.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <Import Include="System.Data" />
@@ -37,14 +46,9 @@
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
     </None>
+    <None Update="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+    </None>
   </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if exist &quot;$(TargetDir)&quot; rd /s /q &quot;$(TargetDir)&quot;" />
-  </Target>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /y &quot;$(ProjectDir)\..\LICENSE.txt&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;xcopy /y &quot;$(ProjectDir)\..\README.md&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;xcopy /y &quot;$(ProjectDir)\..\README.ja.md&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;powershell Compress-Archive -Path '$(TargetDir)*' -DestinationPath '$(TargetDir)$(ProjectName).zip'" />
-  </Target>
 
 </Project>

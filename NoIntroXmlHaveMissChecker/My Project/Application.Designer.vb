@@ -13,30 +13,30 @@ Option Explicit On
 
 
 Namespace My
-    
+
     'メモ:このファイルは自動生成されました。直接変更しないでください。変更したり、
     ' ビルド エラーが発生した場合は、プロジェクト デザイナー へ移動し (プロジェクト
     ' プロパティに移動するか、またはソリューション エクスプローラーのマイ プロジェクト
     ' ノード上でダブルクリック)、アプリケーション タブ上で変更を行います。
     '
     Partial Friend Class MyApplication
-        
-        <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
+
+        <Global.System.Diagnostics.DebuggerStepThroughAttribute()>
         Public Sub New()
             MyBase.New(Global.Microsoft.VisualBasic.ApplicationServices.AuthenticationMode.Windows)
-            Me.IsSingleInstance = false
-            Me.EnableVisualStyles = true
-            Me.SaveMySettingsOnExit = true
-            Me.ShutDownStyle = Global.Microsoft.VisualBasic.ApplicationServices.ShutdownMode.AfterMainFormCloses
+            Me.IsSingleInstance = False
+            Me.EnableVisualStyles = True
+            Me.SaveMySettingsOnExit = True
+            Me.ShutdownStyle = Global.Microsoft.VisualBasic.ApplicationServices.ShutdownMode.AfterMainFormCloses
             Me.HighDpiMode = HighDpiMode.DpiUnaware
         End Sub
-        
-        <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
+
+        <Global.System.Diagnostics.DebuggerStepThroughAttribute()>
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Global.NoIntroXmlHaveMissChecker.FormMain
+            Me.MainForm = AppMainWindow
         End Sub
-        
-        <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
+
+        <Global.System.Diagnostics.DebuggerStepThroughAttribute()>
         Protected Overrides Function OnInitialize(ByVal commandLineArgs As System.Collections.ObjectModel.ReadOnlyCollection(Of String)) As Boolean
             Me.MinimumSplashScreenDisplayTime = 0
             Return MyBase.OnInitialize(commandLineArgs)
