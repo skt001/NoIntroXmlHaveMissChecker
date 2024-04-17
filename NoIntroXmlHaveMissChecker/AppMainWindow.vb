@@ -431,7 +431,7 @@ Public Class AppMainWindow
 
     Private Sub ButtonApplyJapaneseComparisonSettings_Click(sender As Object, e As EventArgs) Handles ButtonApplyJapaneseComparisonSettings.Click
         _utility.SetCheckedListBoxCheckedItems(CheckedListBoxRegionFilters, JapaneseRegions)
-        _utility.SetCheckedListBoxCheckedItems(CheckedListBoxLanguageFilters, EnglishLanguages)
+        _utility.SetCheckedListBoxCheckedItems(CheckedListBoxLanguageFilters, JapaneseLanguages)
         _utility.SetCheckedListBoxCheckedItems(CheckedListBoxOtherFilters, _utility.GetCheckedListBoxItems(CheckedListBoxOtherFilters))
         CheckBoxExcludeUnknownRegionRoms.Checked = True
         CheckBoxExcludeUnknownLanguageRoms.Checked = False
