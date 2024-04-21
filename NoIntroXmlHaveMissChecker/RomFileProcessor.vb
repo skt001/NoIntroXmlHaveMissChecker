@@ -1,4 +1,26 @@
-﻿Imports System.IO
+﻿' MIT License
+' 
+' Copyright (c) 2024 skt001
+' 
+' Permission is hereby granted, free of charge, to any person obtaining a copy
+' of this software and associated documentation files (the "Software"), to deal
+' in the Software without restriction, including without limitation the rights
+' to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+' copies of the Software, and to permit persons to whom the Software is
+' furnished to do so, subject to the following conditions:
+' 
+' The above copyright notice and this permission notice shall be included in all
+' copies or substantial portions of the Software.
+' 
+' THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+' IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+' FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+' AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+' LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+' OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+' SOFTWARE.
+
+Imports System.IO
 Imports System.Reflection
 
 Public Class RomFileProcessor
@@ -8,12 +30,10 @@ Public Class RomFileProcessor
         fileDataTable.Columns.Add("File Size", GetType(Long))
         fileDataTable.Columns.Add("File Type", GetType(String))
 
-        ' RomHeaderクラスの派生クラスのプロパティ名にプレフィックスを付けて動的に列を追加
-        For Each romHeaderType In {GetType(NesRomHeader), GetType(SnesRomHeader), GetType(N64RomHeader), GetType(GbaRomHeader), GetType(NdsRomHeader), GetType(N3dsRomHeader)}
-            Dim prefix As String = CType(Activator.CreateInstance(romHeaderType), RomHeader).Prefix
+        For Each romHeaderType In RomHeader.GetSupportedHeaderTypes()
+            Dim prefix As String = RomHeader.GetPrefix(romHeaderType)
             For Each prop In romHeaderType.GetProperties()
-                ' 特殊なプロパティを除外
-                If prop.Name <> "HeaderSize" AndAlso prop.Name <> "HeaderBytes" AndAlso prop.Name <> "Prefix" Then
+                If prop.Name <> "HeaderSize" AndAlso prop.Name <> "HeaderBytes" AndAlso prop.Name <> "Prefix" AndAlso prop.Name <> "Extensions" Then
                     fileDataTable.Columns.Add(prefix & prop.Name, GetType(String))
                 End If
             Next
@@ -30,21 +50,7 @@ Public Class RomFileProcessor
 
         Dim extension As String = Path.GetExtension(fileName).ToLower()
         Dim romHeader As RomHeader = Nothing
-
-        Select Case extension
-            Case ".nes"
-                romHeader = New NesRomHeader()
-            Case ".smc", ".sfc"
-                romHeader = New SnesRomHeader()
-            Case ".n64", ".v64", ".z64"
-                romHeader = New N64RomHeader()
-            Case ".gba"
-                romHeader = New GbaRomHeader()
-            Case ".nds"
-                romHeader = New NdsRomHeader()
-            Case ".3ds"
-                romHeader = New N3dsRomHeader()
-        End Select
+        romHeader = RomHeader.GetRomHeaderFromExtension(extension)
 
         If romHeader IsNot Nothing Then
             Dim bytesRead As Integer = fileStream.Read(romHeader.HeaderBytes, 0, romHeader.HeaderSize)
@@ -52,7 +58,7 @@ Public Class RomFileProcessor
                 romHeader.SetHeaderInfo()
 
                 For Each prop In romHeader.GetType().GetProperties()
-                    If prop.Name <> "HeaderSize" AndAlso prop.Name <> "HeaderBytes" AndAlso prop.Name <> "Prefix" Then
+                    If prop.Name <> "HeaderSize" AndAlso prop.Name <> "HeaderBytes" AndAlso prop.Name <> "Prefix" AndAlso prop.Name <> "Extensions" Then
                         Dim columnName As String = romHeader.Prefix & prop.Name
                         Dim columnValue As Object = prop.GetValue(romHeader)
                         result(columnName) = If(columnValue Is Nothing, String.Empty, columnValue.ToString())
@@ -67,24 +73,27 @@ Public Class RomFileProcessor
         ' 必要なカラム名のリストを作成
         Dim requiredColumns As New List(Of String) From {"File Name", "File Size", "File Type"}
 
-        ' fileDataTable内のファイル名の拡張子を取得
-        Dim extensions As New HashSet(Of String)
+        ' ROMヘッダークラスの拡張子を取得
+        Dim romExtensions As New HashSet(Of String)
+        For Each romHeaderType In RomHeader.GetSupportedHeaderTypes()
+            Dim extensions As String() = RomHeader.GetExtensions(romHeaderType)
+            For Each extension In extensions
+                romExtensions.Add(extension)
+            Next
+        Next
+
         For Each row As DataRow In fileDataTable.Rows
             Dim fileName As String = CStr(row("File Name"))
             Dim extension As String = Path.GetExtension(fileName).ToLower()
-            extensions.Add(extension)
-        Next
 
-        ' 使用されている拡張子に対応するROMヘッダークラスのプレフィックス付きのプロパティ名を必要なカラム名のリストに追加
-        For Each romHeaderType In {GetType(NesRomHeader), GetType(SnesRomHeader), GetType(N64RomHeader), GetType(GbaRomHeader), GetType(NdsRomHeader), GetType(N3dsRomHeader)}
-            Dim prefix As String = CType(Activator.CreateInstance(romHeaderType), RomHeader).Prefix
-            Dim extensionProperty As PropertyInfo = romHeaderType.GetProperty("Extension")
-            If extensionProperty IsNot Nothing Then
-                Dim extensionValue As String = CStr(extensionProperty.GetValue(Nothing))
-                If extensions.Contains(extensionValue) Then
+            If romExtensions.Contains(extension) Then
+                Dim romHeaderType As Type = Assembly.GetExecutingAssembly().GetTypes().FirstOrDefault(Function(t) GetType(RomHeader).IsAssignableFrom(t) AndAlso RomHeader.GetExtensions(t).Contains(extension))
+                If romHeaderType IsNot Nothing Then
+                    Dim prefix As String = RomHeader.GetPrefix(romHeaderType)
+
+                    ' 必要な列をrequiredColumnsに追加
                     For Each prop In romHeaderType.GetProperties()
-                        ' 特殊なプロパティを除外
-                        If prop.Name <> "HeaderSize" AndAlso prop.Name <> "HeaderBytes" AndAlso prop.Name <> "Prefix" AndAlso prop.Name <> "Extension" Then
+                        If prop.Name <> "HeaderSize" AndAlso prop.Name <> "HeaderBytes" AndAlso prop.Name <> "Prefix" AndAlso prop.Name <> "Extensions" Then
                             requiredColumns.Add(prefix & prop.Name)
                         End If
                     Next

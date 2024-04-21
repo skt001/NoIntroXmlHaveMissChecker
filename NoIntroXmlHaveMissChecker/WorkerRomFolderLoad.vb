@@ -1,4 +1,26 @@
-﻿Imports System.ComponentModel
+﻿' MIT License
+' 
+' Copyright (c) 2024 skt001
+' 
+' Permission is hereby granted, free of charge, to any person obtaining a copy
+' of this software and associated documentation files (the "Software"), to deal
+' in the Software without restriction, including without limitation the rights
+' to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+' copies of the Software, and to permit persons to whom the Software is
+' furnished to do so, subject to the following conditions:
+' 
+' The above copyright notice and this permission notice shall be included in all
+' copies or substantial portions of the Software.
+' 
+' THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+' IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+' FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+' AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+' LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+' OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+' SOFTWARE.
+
+Imports System.ComponentModel
 Imports System.IO
 Imports System.IO.Compression
 
@@ -49,6 +71,7 @@ Public Class WorkerRomFolderLoad
     End Sub
 
     Private Function LoadFolderFiles(folderPath As String) As DataTable
+        Dim processedFileCount As Integer = 0
         Dim fileList As New List(Of FileInfo)()
         Try
             Dim directory As New DirectoryInfo(folderPath)
@@ -67,14 +90,15 @@ Public Class WorkerRomFolderLoad
                 Try
                     If fileInfo.Extension.ToLower() <> ".zip" Then
                         AddRegularFilesToDataTable(fileInfo, fileDataTable)
+                        processedFileCount += 1
                     Else
                         AddZipContentsToDataTable(fileInfo.FullName, fileDataTable)
+                        processedFileCount += 1
                     End If
 
-                    Dim progressPercentage As Integer = CInt(fileDataTable.Rows.Count / fileList.Count * 100)
-                    If fileDataTable.Rows.Count Mod 100 = 0 OrElse
-                        fileList.Count - fileDataTable.Rows.Count <= 100 Then
-                        Dim userState As String = $"{fileDataTable.Rows.Count} / {fileList.Count}"
+                    Dim progressPercentage As Integer = CInt(processedFileCount * 100 / fileList.Count)
+                    If processedFileCount Mod 100 = 0 OrElse processedFileCount = fileList.Count Then
+                        Dim userState As String = $"{processedFileCount} / {fileList.Count}"
                         _backgroundWorker.ReportProgress(progressPercentage, userState)
                     End If
                 Catch ex As Exception
